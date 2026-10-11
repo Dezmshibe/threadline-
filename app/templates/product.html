@@ -1,0 +1,204 @@
+```jinja
+{% extends "base.html" %}
+{% from "_macros.html" import card, product_img, csrf %}
+
+{% block title %}{{ p.name }} · {{ store_name }}{% endblock %}
+
+{% block content %}
+
+<div class="pdp container">
+
+  <div class="pdp-gallery">
+    <div class="thumb big" id="pdp-main">
+      {% if p.images %}
+        <img
+          id="pdp-img"
+          src="{{ url_for('static', filename='uploads/' ~ p.images[0].filename) }}"
+          alt="{{ p.name }}"
+        >
+      {% else %}
+        {{ product_img(p, id='pdp-img') }}
+      {% endif %}
+    </div>
+
+    {% if p.images|length > 1 %}
+      <ul class="pdp-thumbs">
+        {% for img in p.images %}
+          <li>
+            <button
+              type="button"
+              class="thumb-btn {{ 'is-active' if loop.first }}"
+              data-src="{{ url_for('static', filename='uploads/' ~ img.filename) }}"
+              data-hex="{{ loop.first and p.colors[0].hex or '' }}"
+              aria-label="View image {{ loop.index }}"
+            >
+              <img
+                src="{{ url_for('static', filename='uploads/' ~ img.filename) }}"
+                alt=""
+              >
+            </button>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+
+  <div class="pdp-info">
+
+    <p class="crumbs">
+      <a href="{{ url_for('shop.shop') }}">All clothing</a>
+
+      {% if p.category %}
+        /
+        <a href="{{ url_for('shop.shop', category=p.category.slug) }}">
+          {{ p.category.name }}
+        </a>
+      {% endif %}
+    </p>
+
+    <h1>{{ p.name }}</h1>
+
+    <p class="price big">
+      {{ p.price_cents|money }}
+
+      {% if p.on_sale %}
+        <s>{{ p.compare_at_cents|money }}</s>
+      {% endif %}
+    </p>
+
+    {% if p.description %}
+      <p class="desc">{{ p.description }}</p>
+    {% endif %}
+
+    <form
+      method="post"
+      action="{{ url_for('cart.add') }}"
+      id="buy"
+    >
+      {{ csrf() }}
+
+      <input
+        type="hidden"
+        name="product_slug"
+        value="{{ p.slug }}"
+      >
+
+      {% if groups|length > 1 %}
+        <fieldset class="colors">
+
+          <legend>
+            Colour:
+            <span id="color-name">{{ groups[0].name }}</span>
+          </legend>
+
+          {% for g in groups %}
+            <label class="swatch">
+              <input
+                type="radio"
+                name="color"
+                value="{{ g.name }}"
+                data-hex="{{ g.hex }}"
+                {{ 'checked' if loop.first }}
+              >
+
+              <span data-color="{{ g.hex }}"></span>
+
+              <span class="sr">{{ g.name }}</span>
+            </label>
+          {% endfor %}
+
+        </fieldset>
+      {% endif %}
+
+      {% for g in groups %}
+        <fieldset
+          class="sizes-pick"
+          data-color="{{ g.name }}"
+        >
+
+          <legend>
+            Size{% if groups|length > 1 %} ({{ g.name }}){% endif %}
+          </legend>
+
+          {% for v in g.variants %}
+            <label
+              class="size {{ 'out' if v.stock <= 0 }}"
+              {% if 0 < v.stock <= 3 %}
+                title="Only {{ v.stock }} left"
+              {% endif %}
+            >
+
+              <input
+                type="radio"
+                name="variant_id"
+                value="{{ v.id }}"
+                {{ 'disabled' if v.stock <= 0 }}
+              >
+
+              <span>{{ v.size }}</span>
+
+            </label>
+          {% endfor %}
+
+        </fieldset>
+      {% endfor %}
+
+      <div class="buy-row">
+
+        <label
+          class="sr"
+          for="qty"
+        >
+          Quantity
+        </label>
+
+        <select
+          id="qty"
+          name="qty"
+        >
+          {% for n in range(1, 6) %}
+            <option value="{{ n }}">{{ n }}</option>
+          {% endfor %}
+        </select>
+
+        <button
+          class="btn"
+          type="submit"
+          {{ 'disabled' if not p.in_stock }}
+        >
+          {{ 'Add to cart' if p.in_stock else 'Sold out' }}
+        </button>
+
+      </div>
+
+      <p class="muted small">
+        Free delivery over {{ free_shipping_over|money }}.
+        Sizes with a line through them are sold out.
+      </p>
+
+    </form>
+
+  </div>
+
+</div>
+
+{% if related %}
+  <section class="container section">
+
+    <div class="section-head">
+      <h2>
+        More {{ p.category.name|lower if p.category else 'clothing' }}
+      </h2>
+    </div>
+
+    <div class="grid">
+      {% for r in related %}
+        {{ card(r) }}
+      {% endfor %}
+    </div>
+
+  </section>
+{% endif %}
+
+{% endblock %}
+```

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% from "_macros.html" import card %}
+{% block title %}{{ category.name if category else 'All clothing' }} · {{ store_name }}{% endblock %}
+{% block content %}
+<div class="container section">
+  <div class="section-head">
+    <h1 class="h2">{% if q %}Results for “{{ q }}”{% elif category %}{{ category.name }}{% else %}All clothing{% endif %}</h1>
+    <p class="muted">{{ pagination.total }} item{{ '' if pagination.total == 1 else 's' }}</p>
+  </div>
+  <form class="filters" method="get" action="{{ url_for('shop.shop') }}">
+    {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+    <div class="field inline"><label for="f-cat">Type</label>
+      <select id="f-cat" name="category"><option value="">All</option>
+        {% for c in nav_categories %}<option value="{{ c.slug }}" {{ 'selected' if category and category.id == c.id }}>{{ c.name }}</option>{% endfor %}
+      </select></div>
+    <div class="field inline"><label for="f-size">Size in stock</label>
+      <select id="f-size" name="size"><option value="">Any</option>
+        {% for s in all_sizes %}<option value="{{ s }}" {{ 'selected' if s == size }}>{{ s }}</option>{% endfor %}
+      </select></div>
+    <div class="field inline"><label for="f-sort">Sort</label>
+      <select id="f-sort" name="sort">
+        {% for k, label in [('new','Newest'),('price_asc','Price: low to high'),('price_desc','Price: high to low'),('name','Name')] %}
+        <option value="{{ k }}" {{ 'selected' if k == sort }}>{{ label }}</option>{% endfor %}
+      </select></div>
+    <button class="btn secondary" type="submit">Apply</button>
+  </form>
+
+  {% if products %}
+    <div class="grid">{% for p in products %}{{ card(p) }}{% endfor %}</div>
+    {% if pagination.pages > 1 %}
+    <nav class="pager" aria-label="Pages">
+      {% if pagination.has_prev %}<a href="{{ url_for('shop.shop', q=q or None, category=category.slug if category else None, size=size or None, sort=sort, page=pagination.prev_num) }}">Previous</a>{% endif %}
+      <span>Page {{ pagination.page }} of {{ pagination.pages }}</span>
+      {% if pagination.has_next %}<a href="{{ url_for('shop.shop', q=q or None, category=category.slug if category else None, size=size or None, sort=sort, page=pagination.next_num) }}">Next</a>{% endif %}
+    </nav>{% endif %}
+  {% else %}
+    <p class="empty">Nothing matches those filters. <a href="{{ url_for('shop.shop') }}">Clear filters</a> or try another size.</p>
+  {% endif %}
+</div>
+{% endblock %}

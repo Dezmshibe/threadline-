@@ -1,0 +1,73 @@
+{% extends "admin/layout.html" %}
+{% from "_macros.html" import csrf %}
+{% block admin %}
+{% set d = discount %}
+<div class="section-head">
+  <div>
+    <span class="eyebrow">{{ 'Discount / Edit' if d else 'Discount / New' }}</span>
+    <h1 class="h2">{{ 'Edit' if d else 'New' }} discount code</h1>
+  </div>
+  <a href="{{ url_for('admin.discounts') }}">← Back to codes</a>
+</div>
+
+<form method="post" class="admin-form" novalidate>
+  {{ csrf() }}
+
+  <div class="field">
+    <label for="code">Code</label>
+    <input id="code" name="code" required autocomplete="off" style="text-transform:uppercase"
+           placeholder="SPRING20"
+           value="{{ form.get('code') if form else (d.code if d else '') }}">
+    <p class="muted small">Stored uppercase. Customers can type it in any case.</p>
+  </div>
+
+  <div class="row3">
+    <div class="field">
+      <label for="kind">Type</label>
+      <select id="kind" name="kind">
+        {% set k = form.get('kind') if form else (d.kind if d else 'percent') %}
+        <option value="percent" {{ 'selected' if k == 'percent' }}>Percent off</option>
+        <option value="fixed"   {{ 'selected' if k == 'fixed' }}>Fixed amount off</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="amount">Amount</label>
+      <input id="amount" name="amount" required inputmode="decimal"
+             placeholder="20 (percent) or 50.00 (rands)"
+             value="{{ form.get('amount') if form else (d.amount if d else '') }}">
+    </div>
+    <div class="field">
+      <label for="min_spend">Minimum spend (optional)</label>
+      <input id="min_spend" name="min_spend" inputmode="decimal"
+             placeholder="e.g. 300.00"
+             value="{{ form.get('min_spend') if form else (('%.2f' % (d.min_spend_cents / 100)) if d and d.min_spend_cents else '') }}">
+    </div>
+  </div>
+
+  <div class="row3">
+    <div class="field">
+      <label for="max_uses">Maximum uses (optional)</label>
+      <input id="max_uses" name="max_uses" type="number" min="1"
+             placeholder="Leave blank for unlimited"
+             value="{{ form.get('max_uses') if form else (d.max_uses if d and d.max_uses else '') }}">
+    </div>
+    <div class="field">
+      <label for="valid_until">Valid until (optional)</label>
+      <input id="valid_until" name="valid_until" type="date"
+             value="{{ form.get('valid_until') if form else (d.valid_until.strftime('%Y-%m-%d') if d and d.valid_until else '') }}">
+    </div>
+  </div>
+
+  <div class="checks">
+    <label class="inline-check">
+      <input type="checkbox" name="active" {{ 'checked' if (form.get('active') if form else (d.active if d else True)) }}>
+      Active
+    </label>
+  </div>
+
+  <p class="form-actions">
+    <button class="btn" type="submit">{{ 'Save changes' if d else 'Create code' }}</button>
+    <a href="{{ url_for('admin.discounts') }}">Cancel</a>
+  </p>
+</form>
+{% endblock %}

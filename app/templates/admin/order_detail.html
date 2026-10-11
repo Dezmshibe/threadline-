@@ -1,0 +1,92 @@
+{% extends "admin/layout.html" %}
+{% from "_macros.html" import csrf %}
+{% block admin %}
+<div class="section-head">
+  <div>
+    <span class="eyebrow">Order detail</span>
+    <h1 class="h2">{{ order.ref }}</h1>
+  </div>
+  <button class="btn secondary sm no-print" type="button" onclick="window.print()">🖨 Print packing slip</button>
+</div>
+
+<div class="two-col">
+  <section>
+    <h2 class="h3">Items</h2>
+    <table class="table">
+      <thead>
+        <tr><th>Item</th><th>Qty</th><th>Line total</th></tr>
+      </thead>
+      <tbody>
+        {% for i in order.items %}
+        <tr>
+          <td>
+            {{ i.product_name }}
+            <span class="muted">({{ i.color }}, {{ i.size }})</span>
+          </td>
+          <td>{{ i.qty }}</td>
+          <td>{{ i.line_cents|money }}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+          <td colspan="2">Delivery</td>
+          <td>{{ order.shipping_cents|money }}</td>
+        </tr>
+        <tr class="total">
+          <td colspan="2">Total</td>
+          <td>{{ order.total_cents|money }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 class="h3" style="margin-top: 32px;">Customer</h2>
+    <address>
+      <strong>{{ order.name }}</strong><br>
+      <a href="mailto:{{ order.email }}">{{ order.email }}</a><br>
+      {{ order.phone }}<br><br>
+      {{ order.address1 }}<br>
+      {% if order.address2 %}{{ order.address2 }}<br>{% endif %}
+      {{ order.city }}, {{ order.province }} {{ order.postal_code }}
+    </address>
+
+    <p class="muted small">
+      Pay by <strong>{{ order.payment_method }}</strong>
+      {% if order.pf_payment_id %} · PayFast ref {{ order.pf_payment_id }}{% endif %}
+      · Placed {{ order.created_at.strftime('%d %b %Y %H:%M') }} UTC
+      {% if order.paid_at %} · Paid {{ order.paid_at.strftime('%d %b %Y %H:%M') }} UTC{% endif %}
+    </p>
+  </section>
+
+  <section class="no-print">
+    <h2 class="h3">Status</h2>
+    <p><span class="status s-{{ order.status }}">{{ order.status }}</span></p>
+
+    <form method="post" class="inline-form">
+      {{ csrf() }}
+      <div class="field inline">
+        <label for="status">Change to</label>
+        <select id="status" name="status">
+          {% for s in statuses %}
+          <option value="{{ s }}" {{ 'selected' if s == order.status }}>{{ s|capitalize }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button class="btn sm" type="submit">Update</button>
+    </form>
+
+    <p class="muted small">
+      Cancelling puts the items back in stock. Cancelled orders can't be reopened.
+    </p>
+
+    <h2 class="h3" style="margin-top: 32px;">Quick actions</h2>
+    <p>
+      <a class="btn secondary sm" href="mailto:{{ order.email }}?subject=Your+{{ store_name }}+order+{{ order.ref }}">✉ Email customer</a>
+      {% if whatsapp_number %}
+      <a class="btn secondary sm" target="_blank" rel="noopener"
+         href="https://wa.me/{{ order.phone | replace('+','') | replace(' ','') | replace('-','') }}?text={{ ('Hi ' ~ order.name ~ ', about your ' ~ store_name ~ ' order ' ~ order.ref) | urlencode }}">
+        💬 WhatsApp customer
+      </a>
+      {% endif %}
+    </p>
+  </section>
+</div>
+{% endblock %}

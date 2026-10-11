@@ -1,0 +1,66 @@
+{% extends "admin/layout.html" %}
+{% from "_macros.html" import csrf %}
+{% block admin %}
+<div class="section-head">
+  <div>
+    <span class="eyebrow">Marketing</span>
+    <h1 class="h2">Discount codes</h1>
+  </div>
+  <a class="btn sm" href="{{ url_for('admin.discount_new') }}">+ New code</a>
+</div>
+
+{% if discounts %}
+<table class="table">
+  <thead>
+    <tr>
+      <th>Code</th>
+      <th>Type</th>
+      <th>Amount</th>
+      <th>Min spend</th>
+      <th>Uses</th>
+      <th>Expires</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for d in discounts %}
+    <tr>
+      <td><a href="{{ url_for('admin.discount_edit', did=d.id) }}"><strong>{{ d.code }}</strong></a></td>
+      <td>{{ 'Percent' if d.kind == 'percent' else 'Fixed' }}</td>
+      <td>
+        {% if d.kind == 'percent' %}{{ d.amount }}%{% else %}{{ d.amount|money }}{% endif %}
+      </td>
+      <td>{{ d.min_spend_cents|money if d.min_spend_cents else '—' }}</td>
+      <td>{{ d.uses }}{% if d.max_uses %} / {{ d.max_uses }}{% endif %}</td>
+      <td>
+        {% if d.valid_until %}{{ d.valid_until.strftime('%d %b %Y') }}{% else %}<span class="muted">—</span>{% endif %}
+      </td>
+      <td>
+        {% if not d.active %}<span class="status s-cancelled">Inactive</span>
+        {% elif d.expired %}<span class="status s-cancelled">Expired</span>
+        {% elif d.maxed_out %}<span class="status s-pending">Maxed out</span>
+        {% else %}<span class="status s-paid">Active</span>{% endif %}
+      </td>
+      <td class="actions">
+        <a href="{{ url_for('admin.discount_edit', did=d.id) }}">Edit</a>
+        <form method="post" action="{{ url_for('admin.discount_toggle', did=d.id) }}">
+          {{ csrf() }}
+          <button class="link" type="submit">{{ 'Deactivate' if d.active else 'Activate' }}</button>
+        </form>
+        <form method="post" action="{{ url_for('admin.discount_delete', did=d.id) }}"
+              onsubmit="return confirm('Delete {{ d.code }}?')">
+          {{ csrf() }}
+          <button class="link" type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="empty">
+  No discount codes yet. <a href="{{ url_for('admin.discount_new') }}">Create one</a>.
+</p>
+{% endif %}
+{% endblock %}

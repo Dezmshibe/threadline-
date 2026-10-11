@@ -1,0 +1,38 @@
+{% extends "admin/layout.html" %}
+{% block admin %}
+<div class="section-head">
+  <div>
+    <span class="eyebrow">Fulfilment</span>
+    <h1 class="h2">Orders</h1>
+  </div>
+</div>
+
+<nav class="chips" aria-label="Filter by status">
+  <a href="{{ url_for('admin.orders') }}" class="{{ 'on' if not status }}">All</a>
+  {% for s in statuses %}
+  <a href="{{ url_for('admin.orders', status=s) }}" class="{{ 'on' if s == status }}">{{ s|capitalize }}</a>
+  {% endfor %}
+</nav>
+
+{% if orders %}
+<table class="table">
+  <thead>
+    <tr><th>Order</th><th>Date</th><th>Customer</th><th>Pay by</th><th>Total</th><th>Status</th></tr>
+  </thead>
+  <tbody>
+    {% for o in orders %}
+    <tr>
+      <td><a href="{{ url_for('admin.order_detail', oid=o.id) }}">{{ o.ref }}</a></td>
+      <td class="muted">{{ o.created_at.strftime('%d %b %Y') }}</td>
+      <td>{{ o.name }}</td>
+      <td><span class="muted">{{ o.payment_method }}</span></td>
+      <td><strong>{{ o.total_cents|money }}</strong></td>
+      <td><span class="status s-{{ o.status }}">{{ o.status }}</span></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="empty">No orders{{ ' with that status' if status }}.</p>
+{% endif %}
+{% endblock %}

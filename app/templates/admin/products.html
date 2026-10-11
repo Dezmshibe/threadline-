@@ -1,0 +1,16 @@
+{% extends "admin/layout.html" %}
+{% from "_macros.html" import csrf %}
+{% block admin %}
+<div class="section-head"><h1 class="h2">Products</h1><a class="btn sm" href="{{ url_for('admin.product_new') }}">Add product</a></div>
+<form method="get" class="search wide"><label class="sr" for="aq">Search products</label><input id="aq" name="q" type="search" placeholder="Search products" value="{{ q }}"></form>
+{% if products %}
+<table class="table"><thead><tr><th>Name</th><th>Price</th><th>Stock</th><th>Status</th><th></th></tr></thead><tbody>
+{% for p in products %}
+<tr><td><a href="{{ url_for('admin.product_edit', pid=p.id) }}">{{ p.name }}</a></td>
+<td>{{ p.price_cents|money }}</td><td>{{ p.variants|sum(attribute='stock') }}</td>
+<td>{{ 'Visible' if p.is_active else 'Hidden' }}</td>
+<td class="actions"><a href="{{ url_for('admin.product_edit', pid=p.id) }}">Edit</a>
+<form method="post" action="{{ url_for('admin.product_toggle', pid=p.id) }}">{{ csrf() }}<button class="link" type="submit">{{ 'Hide' if p.is_active else 'Show' }}</button></form></td></tr>
+{% endfor %}</tbody></table>
+{% else %}<p class="empty">No products found.</p>{% endif %}
+{% endblock %}

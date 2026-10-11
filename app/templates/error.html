@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} · {{ store_name }}{% endblock %}
+{% block content %}
+<div class="container section narrow">
+  <h1 class="h2">{{ message }}</h1>
+  <p><a class="btn" href="{{ url_for('shop.home') }}">Back to the shop</a></p>
+</div>
+{% endblock %}

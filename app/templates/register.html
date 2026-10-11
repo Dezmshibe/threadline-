@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, field %}
+{% block title %}Create account · {{ store_name }}{% endblock %}
+{% block content %}
+<div class="container section narrow">
+  <h1 class="h2">Create an account</h1>
+  <form method="post" novalidate>
+    {{ csrf() }}
+    {{ field('name', 'Full name', form, errors, autocomplete='name') }}
+    {{ field('email', 'Email', form, errors, type='email', autocomplete='email') }}
+    <div class="field {{ 'has-error' if errors.get('password') }}"><label for="f-password">Password (8 or more characters)</label>
+      <input id="f-password" name="password" type="password" autocomplete="new-password" required>
+      {% if errors.get('password') %}<p class="err">{{ errors['password'] }}</p>{% endif %}</div>
+    <button class="btn" type="submit">Create account</button>
+  </form>
+  <p class="muted">Already have one? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+</div>
+{% endblock %}

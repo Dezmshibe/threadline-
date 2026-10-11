@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf %}
+{% block title %}Track your order · {{ store_name }}{% endblock %}
+{% block content %}
+<div class="container section narrow">
+  <span class="eyebrow">Order lookup</span>
+  <h1 class="h2">Track your order</h1>
+  <p class="muted">Enter your order reference (starts with TL) and the email you used at checkout.</p>
+
+  {% if error %}<p class="flash error" role="alert">{{ error }}</p>{% endif %}
+
+  <form method="post">
+    {{ csrf() }}
+    <div class="field">
+      <label for="ref">Order reference</label>
+      <input id="ref" name="ref" value="{{ ref }}" placeholder="TLXXXXXXXX" required autocapitalize="characters">
+    </div>
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" value="{{ email }}" required autocomplete="email">
+    </div>
+    <button class="btn" type="submit">Find my order</button>
+  </form>
+
+  <p class="muted small">Don't have your reference? <a href="{{ url_for('auth.login') }}">Log in</a> to see all your orders.</p>
+</div>
+{% endblock %}

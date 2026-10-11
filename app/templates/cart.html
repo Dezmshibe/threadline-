@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, product_img %}
+{% block title %}Your cart · {{ store_name }}{% endblock %}
+{% block content %}
+<div class="container section narrow-wide">
+  <h1 class="h2">Your cart</h1>
+  {% if cart.items %}
+  <div class="cart-layout">
+    <ul class="lines">
+      {% for l in cart['items'] %}
+      <li class="line-item">
+        <div class="thumb sm">{{ product_img(l.product, l.variant.color_hex) }}</div>
+        <div class="li-main">
+          <a href="{{ url_for('shop.product', slug=l.product.slug) }}"><strong>{{ l.product.name }}</strong></a>
+          <p class="muted">{{ l.variant.color }}, size {{ l.variant.size }}</p>
+          <p class="muted">{{ l.product.price_cents|money }} each</p>
+          <div class="li-actions">
+            <form method="post" action="{{ url_for('cart.update') }}" class="qty-form">
+              {{ csrf() }}<input type="hidden" name="variant_id" value="{{ l.variant.id }}">
+              <label class="sr" for="q{{ l.variant.id }}">Quantity</label>
+              <input id="q{{ l.variant.id }}" type="number" name="qty" value="{{ l.qty }}" min="0" max="{{ [l.variant.stock, 10]|min }}">
+              <button class="btn secondary sm" type="submit">Update</button>
+            </form>
+            <form method="post" action="{{ url_for('cart.remove') }}">
+              {{ csrf() }}<input type="hidden" name="variant_id" value="{{ l.variant.id }}">
+              <button class="link" type="submit">Remove</button>
+            </form>
+          </div>
+        </div>
+        <p class="li-total">{{ l.line_cents|money }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+    <aside class="summary">
+      <h2 class="h3">Order summary</h2>
+            <dl>
+        <div><dt>Subtotal</dt><dd>{{ cart.subtotal|money }}</dd></div>
+        {% if cart.discount_cents %}
+        <div class="discount-line">
+          <dt>
+            Discount <code>{{ cart.discount.code }}</code>
+            <form method="post" action="{{ url_for('cart.remove_discount') }}" style="display:inline">
+              {{ csrf() }}
+              <button class="link" type="submit" title="Remove">✕</button>
+            </form>
+          </dt>
+          <dd>− {{ cart.discount_cents|money }}</dd>
+        </div>
+        {% endif %}
+        <div><dt>Delivery</dt><dd>{{ 'Free' if cart.shipping == 0 else cart.shipping|money }}</dd></div>
+        <div class="total"><dt>Total</dt><dd>{{ cart.total|money }}</dd></div>
+      </dl>
+
+      {% if not cart.discount %}
+      <form method="post" action="{{ url_for('cart.apply_discount') }}" class="discount-form">
+        {{ csrf() }}
+        <label class="sr" for="discount-code">Discount code</label>
+        <input id="discount-code" name="code" placeholder="Discount code" autocomplete="off">
+        <button class="btn secondary sm" type="submit">Apply</button>
+      </form>
+      {% endif %}
+      {% if cart.shipping > 0 %}<p class="muted small">Add {{ (free_shipping_over - cart.subtotal)|money }} more for free delivery.</p>{% endif %}
+      <a class="btn block" href="{{ url_for('cart.checkout') }}">Go to checkout</a>
+    </aside>
+  </div>
+  {% else %}
+  <p class="empty">Your cart is empty. <a href="{{ url_for('shop.shop') }}">Browse clothing</a>.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "admin/layout.html" %}
+{% from "_macros.html" import csrf %}
+{% block admin %}
+<h1 class="h2">Categories</h1>
+<ul class="plain">{% for c in categories %}<li>{{ c.name }} <span class="muted">({{ c.products|length }} products)</span></li>{% endfor %}</ul>
+<form method="post" class="inline-form">{{ csrf() }}
+  <div class="field inline"><label for="cname">New category</label><input id="cname" name="name" required></div>
+  <button class="btn secondary" type="submit">Add category</button>
+</form>
+<p class="muted small">Garment drawings are matched to the slugs tops, bottoms, dresses, outerwear and accessories. Other categories use the top drawing until you upload photos.</p>
+{% endblock %}

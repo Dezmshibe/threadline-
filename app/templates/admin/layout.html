@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Admin · {{ store_name }}{% endblock %}
+{% block content %}
+<div class="container section">
+  <nav class="subnav" aria-label="Admin">
+  <a href="{{ url_for('admin.dashboard') }}">Overview</a>
+  <a href="{{ url_for('admin.orders') }}">Orders</a>
+  <a href="{{ url_for('admin.products') }}">Products</a>
+  <a href="{{ url_for('admin.categories') }}">Categories</a>
+  <a href="{{ url_for('admin.discounts') }}">Discounts</a>
+</nav>
+  {% block admin %}{% endblock %}
+</div>
+{% endblock %}

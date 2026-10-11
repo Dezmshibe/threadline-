@@ -1,0 +1,35 @@
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro product_img(p, hex=None, id=None) -%}
+{%- set first = p.images[0] if p.images else None -%}
+{%- if first -%}
+<img {% if id %}id="{{ id }}" {% endif %}src="{{ url_for('static', filename='uploads/' ~ first.filename) }}" alt="{{ p.name }}" loading="lazy">
+{%- elif p.image -%}
+<img {% if id %}id="{{ id }}" {% endif %}src="{{ url_for('static', filename='uploads/' ~ p.image) }}" alt="{{ p.name }}" loading="lazy">
+{%- else -%}
+{%- set h = hex or (p.colors[0].hex if p.colors else 'cfd3da') -%}
+<img {% if id %}id="{{ id }}" {% endif %}data-ph="{{ url_for('shop.placeholder', kind=p.kind, hexcode='__HEX__') }}" src="{{ url_for('shop.placeholder', kind=p.kind, hexcode=h) }}" alt="{{ p.name }}" loading="lazy">
+{%- endif -%}
+{%- endmacro %}
+
+{% macro card(p) %}
+<article class="card">
+  <a class="card-link" href="{{ url_for('shop.product', slug=p.slug) }}">
+    <div class="thumb">{{ product_img(p) }}
+      {% if not p.in_stock %}<span class="flag">Sold out</span>{% elif p.on_sale %}<span class="flag sale">Sale</span>{% endif %}
+    </div>
+    <h3>{{ p.name }}</h3>
+  </a>
+  <p class="price">{{ p.price_cents|money }}{% if p.on_sale %} <s>{{ p.compare_at_cents|money }}</s>{% endif %}</p>
+  <ul class="dots" aria-label="Colours">{% for c in p.colors %}<li style="--c:#{{ c.hex }}" title="{{ c.name }}"></li>{% endfor %}</ul>
+  <p class="sizes">{% for s in p.size_status %}<span class="{{ '' if s.available else 'out' }}">{{ s.size }}</span>{% endfor %}</p>
+</article>
+{% endmacro %}
+
+{% macro field(name, label, form, errors, type='text', autocomplete=None, required=True) %}
+<div class="field {{ 'has-error' if errors.get(name) }}">
+  <label for="f-{{ name }}">{{ label }}</label>
+  <input id="f-{{ name }}" name="{{ name }}" type="{{ type }}" value="{{ form.get(name, '') }}" {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %} {% if required %}required{% endif %} {% if errors.get(name) %}aria-invalid="true" aria-describedby="e-{{ name }}"{% endif %}>
+  {% if errors.get(name) %}<p class="err" id="e-{{ name }}">{{ errors[name] }}</p>{% endif %}
+</div>
+{% endmacro %}

@@ -1,0 +1,158 @@
+{% extends "admin/layout.html" %}
+{% from "_macros.html" import csrf %}
+
+{% macro vrow(id, size, color, hex, stock) %}
+<tr class="vrow">
+  <td>
+    <input type="hidden" name="v_id" value="{{ id }}">
+    <input name="v_size" value="{{ size }}" aria-label="Size" placeholder="M">
+  </td>
+  <td><input name="v_color" value="{{ color }}" aria-label="Colour name" placeholder="Indigo"></td>
+  <td><input name="v_hex" type="color" value="#{{ hex }}" aria-label="Colour swatch"></td>
+  <td><input name="v_stock" type="number" min="0" value="{{ stock }}" aria-label="Stock"></td>
+  <td><button class="link" type="button" data-remove-row>Remove</button></td>
+</tr>
+{% endmacro %}
+
+{% block admin %}
+{% set posted = form and form.getlist('v_size') %}
+
+<div class="section-head">
+  <div>
+    <span class="eyebrow">{{ 'Catalogue / Edit' if product.id else 'Catalogue / New' }}</span>
+    <h1 class="h2">{{ 'Edit' if product.id else 'Add' }} product</h1>
+  </div>
+  <a href="{{ url_for('admin.products') }}">← Back to products</a>
+</div>
+
+<form id="product-form" method="post"
+      action="{{ url_for('admin.product_edit', pid=product.id) if product.id else url_for('admin.product_new') }}"
+      enctype="multipart/form-data" class="admin-form" novalidate>
+  {{ csrf() }}
+
+  <div class="field">
+    <label for="name">Name</label>
+    <input id="name" name="name" required
+           value="{{ form.get('name') if form else product.name or '' }}">
+  </div>
+
+  <div class="field">
+    <label for="description">Description</label>
+    <textarea id="description" name="description" rows="4">{{ form.get('description') if form else product.description or '' }}</textarea>
+  </div>
+
+  <div class="row3">
+    <div class="field">
+      <label for="price">Price (rand)</label>
+      <input id="price" name="price" inputmode="decimal" required
+             value="{{ form.get('price') if form else ('%.2f' % (product.price_cents / 100) if product.price_cents else '') }}">
+    </div>
+    <div class="field">
+      <label for="compare_at">Was price (optional)</label>
+      <input id="compare_at" name="compare_at" inputmode="decimal"
+             value="{{ form.get('compare_at') if form else ('%.2f' % (product.compare_at_cents / 100) if product.compare_at_cents else '') }}">
+    </div>
+    <div class="field">
+      <label for="category_id">Category</label>
+      <select id="category_id" name="category_id" required>
+        {% for c in categories %}
+        <option value="{{ c.id }}" {{ 'selected' if selected_category == c.id }}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <div class="checks">
+    <label class="inline-check">
+      <input type="checkbox" name="is_active" {{ 'checked' if (form.get('is_active') if form else product.is_active) }}>
+      Visible in the shop
+    </label>
+    <label class="inline-check">
+      <input type="checkbox" name="featured" {{ 'checked' if (form.get('featured') if form else product.featured) }}>
+      Featured on home page
+    </label>
+  </div>
+
+  <h2 class="h3">Sizes, colours and stock</h2>
+  <p class="muted small">One row per size and colour. Clear both size and colour to remove a row.</p>
+
+  <table class="table vtable">
+    <thead>
+      <tr><th>Size</th><th>Colour</th><th>Swatch</th><th>Stock</th><th></th></tr>
+    </thead>
+    <tbody id="variant-rows">
+      {% if posted %}
+        {% for i in range(form.getlist('v_size')|length) %}
+          {{ vrow(form.getlist('v_id')[i], form.getlist('v_size')[i], form.getlist('v_color')[i], form.getlist('v_hex')[i]|replace('#',''), form.getlist('v_stock')[i]) }}
+        {% endfor %}
+      {% else %}
+        {% for v in product.variants %}
+          {{ vrow(v.id, v.size, v.color, v.color_hex, v.stock) }}
+        {% endfor %}
+        {% if not product.variants %}
+          {{ vrow('', '', '', '2a3990', 0) }}
+        {% endif %}
+      {% endif %}
+    </tbody>
+  </table>
+
+  <template id="variant-template">{{ vrow('', '', '', '2a3990', 0) }}</template>
+
+  <p><button class="btn secondary sm" type="button" data-add-variant>Add a row</button></p>
+</form>
+{# ^^^^ MAIN FORM ENDS HERE — MUST HAVE A CLOSING </form> ^^^^ #}
+
+{% if product.id %}
+<section class="photo-section">
+  <h2 class="h3">Photos <span class="muted small">({{ product.images|length }} uploaded)</span></h2>
+  <p class="muted small">
+    Upload JPG, PNG or WebP, up to 4 MB each. First image is the primary.
+    {% if not product.images %}Without photos, the shop shows a colour-matched garment drawing.{% endif %}
+  </p>
+
+  {% if product.images %}
+  <div class="image-grid">
+    {% for img in product.images %}
+    <div class="image-cell {{ 'is-primary' if loop.first }}">
+      <img src="{{ url_for('static', filename='uploads/' ~ img.filename) }}" alt="{{ img.alt_text }}">
+      <div class="image-cell-actions">
+        {% if not loop.first %}
+        <form method="post" action="{{ url_for('admin.product_image_primary', pid=product.id, iid=img.id) }}">
+          {{ csrf() }}
+          <button class="link" type="submit" title="Make primary">★</button>
+        </form>
+        {% else %}
+        <span class="badge-primary" title="Primary image">Primary</span>
+        {% endif %}
+        <form method="post" action="{{ url_for('admin.product_image_delete', pid=product.id, iid=img.id) }}"
+              onsubmit="return confirm('Remove this image?')">
+          {{ csrf() }}
+          <button class="link" type="submit" title="Delete">✕</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data"
+        action="{{ url_for('admin.product_image_upload', pid=product.id) }}"
+        class="image-upload-form">
+    {{ csrf() }}
+    <input type="file" name="images" multiple accept="image/jpeg,image/png,image/webp">
+    <button class="btn" type="submit">Upload photos</button>
+  </form>
+</section>
+{% else %}
+<section class="photo-section">
+  <h2 class="h3">Photos</h2>
+  <p class="muted small">Save this product first, then you can add photos.</p>
+</section>
+{% endif %}
+
+<p class="form-actions">
+  <button form="product-form" class="btn" type="submit">Save details</button>
+  <a href="{{ url_for('admin.products') }}">Cancel</a>
+</p>
+
+{% endblock %}

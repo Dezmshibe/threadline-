@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% from "_macros.html" import card %}
+
+{% block content %}
+
+<section class="hero">
+  <div class="container">
+    <span class="eyebrow">Est. Cape Town · Sizes XS–XXL</span>
+
+    <h1>
+      Everyday <em>clothes</em>, cut in full size runs.
+    </h1>
+
+    <p class="lede">
+      Tees, denim, dresses and layers from XS to XXL.
+      Free delivery over {{ free_shipping_over|money }}.
+    </p>
+
+    <h2 class="hero-sub">Shop your size</h2>
+
+    <ul class="sizerun">
+      {% for s in hero_sizes %}
+        <li>
+          <a
+            href="{{ url_for('shop.shop', size=s) }}"
+            aria-label="Shop size {{ s }}"
+          >
+            <span>{{ s }}</span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+
+{% if featured %}
+<section class="container section">
+  <div class="section-head">
+    <h2>Staples</h2>
+    <a href="{{ url_for('shop.shop') }}">See all clothing</a>
+  </div>
+
+  <div class="grid">
+    {% for p in featured %}
+      {{ card(p) }}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="container section">
+  <div class="section-head">
+    <h2>Browse by type</h2>
+  </div>
+
+  <ul class="types">
+    {% for c in nav_categories %}
+      <li>
+        <a href="{{ url_for('shop.shop', category=c.slug) }}">
+          {{ c.name }}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="container section">
+  <div class="section-head">
+    <h2>New in</h2>
+  </div>
+
+  {% if newest %}
+    <div class="grid">
+      {% for p in newest %}
+        {{ card(p) }}
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="empty">
+      No products yet.
+      <a href="{{ url_for('admin.products') }}">Add some in the admin.</a>
+    </p>
+  {% endif %}
+</section>
+
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends "admin/layout.html" %}
+{% block admin %}
+<div class="section-head">
+  <div>
+    <span class="eyebrow">Last 14 days</span>
+    <h1 class="h2">Overview</h1>
+  </div>
+</div>
+
+<dl class="stats">
+  <div>
+    <dt>Orders to ship</dt>
+    <dd>{{ stats.to_ship }}</dd>
+  </div>
+  <div>
+    <dt>Awaiting payment</dt>
+    <dd>{{ stats.awaiting_payment }}</dd>
+  </div>
+  <div>
+    <dt>Revenue (paid orders)</dt>
+    <dd>{{ stats.revenue|money }}</dd>
+  </div>
+  <div>
+    <dt>Live products</dt>
+    <dd>{{ stats.products }}</dd>
+  </div>
+</dl>
+
+<section class="chart-panel">
+  <h2 class="h3">Sales — last 14 days</h2>
+  <p class="muted small">Peak day: {{ peak|money }}. Bars scale to the highest day.</p>
+  <div class="chart" role="img" aria-label="Bar chart of daily revenue for the last 14 days">
+    {% for d in days %}
+    <div class="bar-col">
+      <div class="bar-track">
+    <div class="bar-fill" data-pct="{{ d.pct }}"
+     title="{{ d.date.strftime('%d %b') }} — {{ d.cents|money }} ({{ d.count }} order{{ '' if d.count == 1 else 's' }})"></div>
+             title="{{ d.date.strftime('%d %b') }} — {{ d.cents|money }} ({{ d.count }} order{{ '' if d.count == 1 else 's' }})"></div>
+      </div>
+      <span class="bar-label">{{ d.date.strftime('%d') }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="chart-legend">
+    <span class="muted small">Total: {{ days | sum(attribute='cents') | money }}</span>
+  </div>
+</section>
+
+<div class="two-col">
+  <section>
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Latest</span>
+        <h2>Recent orders</h2>
+      </div>
+      <a href="{{ url_for('admin.orders') }}">View all →</a>
+    </div>
+    {% if recent %}
+      <table class="table">
+        <thead>
+          <tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          {% for o in recent %}
+          <tr>
+            <td><a href="{{ url_for('admin.order_detail', oid=o.id) }}">{{ o.ref }}</a></td>
+            <td>{{ o.name }}</td>
+            <td>{{ o.total_cents|money }}</td>
+            <td><span class="status s-{{ o.status }}">{{ o.status }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="empty">No orders yet.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Attention</span>
+        <h2>Low or out of stock</h2>
+      </div>
+      <a href="{{ url_for('admin.products') }}">Manage →</a>
+    </div>
+    {% if low %}
+      <table class="table">
+        <thead>
+          <tr><th>Product</th><th>Variant</th><th>Left</th></tr>
+        </thead>
+        <tbody>
+          {% for v in low %}
+          <tr>
+            <td><a href="{{ url_for('admin.product_edit', pid=v.product_id) }}">{{ v.product.name }}</a></td>
+            <td>{{ v.color }}, {{ v.size }}</td>
+            <td>
+              {% if v.stock == 0 %}<span class="status s-cancelled">Sold out</span>
+              {% else %}<span class="status s-pending">{{ v.stock }} left</span>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="empty">Everything is well stocked.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

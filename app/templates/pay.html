@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Redirecting to PayFast · {{ store_name }}{% endblock %}
+{% block content %}
+<div class="container section narrow">
+  <h1 class="h2">Taking you to PayFast</h1>
+  <p>Order {{ order.ref }}, {{ order.total_cents|money }}. If nothing happens, use the button.</p>
+  <form method="post" action="{{ action }}" data-autosubmit>
+    {% for k, v in fields %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+    <button class="btn" type="submit">Continue to PayFast</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Your account · {{ store_name }}{% endblock %}
+{% block content %}
+<div class="container section narrow-wide">
+  <h1 class="h2">Hi, {{ current_user.name.split(' ')[0] }}</h1>
+  <h2 class="h3">Your orders</h2>
+  {% if orders %}
+  <ul class="lines">
+    {% for o in orders %}
+    <li class="line-item compact"><div class="li-main"><a href="{{ url_for('cart.order_view', ref=o.ref) }}"><strong>{{ o.ref }}</strong></a>
+      <p class="muted">{{ o.created_at.strftime('%d %b %Y') }}, {{ o.items|length }} item{{ '' if o.items|length == 1 else 's' }}</p></div>
+      <p><span class="status s-{{ o.status }}">{{ o.status|capitalize }}</span></p><p class="li-total">{{ o.total_cents|money }}</p></li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="empty">No orders yet. <a href="{{ url_for('shop.shop') }}">Start shopping</a>.</p>{% endif %}
+</div>
+{% endblock %}

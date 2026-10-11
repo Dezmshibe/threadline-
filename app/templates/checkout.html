@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, field %}
+{% block title %}Checkout · {{ store_name }}{% endblock %}
+{% block content %}
+<div class="container section narrow-wide">
+  <h1 class="h2">Checkout</h1>
+  {% if errors %}<p class="flash error" role="alert">Fix the highlighted fields to continue.</p>{% endif %}
+  <form method="post" class="cart-layout" novalidate>
+    {{ csrf() }}
+    <div>
+      <fieldset class="block-fs"><legend>Contact</legend>
+        {{ field('name', 'Full name', form, errors, autocomplete='name') }}
+        {{ field('email', 'Email', form, errors, type='email', autocomplete='email') }}
+        {{ field('phone', 'Phone (for the courier)', form, errors, type='tel', autocomplete='tel') }}
+      </fieldset>
+      <fieldset class="block-fs"><legend>Delivery address</legend>
+        {{ field('address1', 'Street address', form, errors, autocomplete='address-line1') }}
+        {{ field('address2', 'Apartment, complex or suburb (optional)', form, errors, autocomplete='address-line2', required=False) }}
+        {{ field('city', 'City or town', form, errors, autocomplete='address-level2') }}
+        <div class="field {{ 'has-error' if errors.get('province') }}">
+          <label for="f-province">Province</label>
+          <select id="f-province" name="province" required>
+            <option value="">Choose a province</option>
+            {% for pv in provinces %}<option {{ 'selected' if form.get('province') == pv }}>{{ pv }}</option>{% endfor %}
+          </select>
+          {% if errors.get('province') %}<p class="err">{{ errors['province'] }}</p>{% endif %}
+        </div>
+        {{ field('postal_code', 'Postal code', form, errors, autocomplete='postal-code') }}
+      </fieldset>
+      <fieldset class="block-fs"><legend>Payment</legend>
+        {% for key, label in options %}
+        <label class="radio-row"><input type="radio" name="payment_method" value="{{ key }}" {{ 'checked' if form.get('payment_method') == key }}> <span>{{ label }}</span></label>
+        {% endfor %}
+        {% if errors.get('payment_method') %}<p class="err">{{ errors['payment_method'] }}</p>{% endif %}
+      </fieldset>
+    </div>
+    <aside class="summary">
+      <h2 class="h3">Your order</h2>
+      <ul class="mini">
+        {% for l in cart['items'] %}<li><span>{{ l.qty }} × {{ l.product.name }} <span class="muted">({{ l.variant.color }}, {{ l.variant.size }})</span></span><span>{{ l.line_cents|money }}</span></li>{% endfor %}
+      </ul>
+      <dl>
+        <div><dt>Subtotal</dt><dd>{{ cart.subtotal|money }}</dd></div>
+        <div><dt>Delivery</dt><dd>{{ 'Free' if cart.shipping == 0 else cart.shipping|money }}</dd></div>
+        <div class="total"><dt>Total</dt><dd>{{ cart.total|money }}</dd></div>
+      </dl>
+      <button class="btn block" type="submit">Place order</button>
+    </aside>
+  </form>
+</div>
+{% endblock %}
