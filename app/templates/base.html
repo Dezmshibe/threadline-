@@ -2,241 +2,92 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1"
-  >
-
-  <title>
-    {% block title %}
-      {{ store_name }}
-    {% endblock %}
-  </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ store_name }}{% endblock %}</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
-
-  <link
-    rel="preconnect"
-    href="https://fonts.gstatic.com"
-    crossorigin
-  >
-
-  <link
-    href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600;700&display=swap"
-    rel="stylesheet"
-  >
-
-  <link
-    rel="stylesheet"
-    href="{{ url_for('static', filename='css/style.css') }}"
-  >
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
 
-<a class="skip" href="#main">
-  Skip to content
-</a>
+<a class="skip" href="#main">Skip to content</a>
 
 <header class="site-header">
-
   <div class="announcement">
-    <span>
-      ★ Free delivery over {{ free_shipping_over|money }}
-    </span>
-
+    <span>★ Free delivery over {{ free_shipping_over|money }}</span>
     <span class="dot">·</span>
-
-    <span>
-      Made in South Africa
-    </span>
-
+    <span>Made in South Africa</span>
     <span class="dot">·</span>
-
-    <span>
-      Returns within 30 days
-    </span>
-
+    <span>Returns within 30 days</span>
     <span class="dot">★</span>
   </div>
 
   <div class="container bar">
+    <a class="wordmark" href="{{ url_for('shop.home') }}">{{ store_name }}</a>
 
-    <a
-      class="wordmark"
-      href="{{ url_for('shop.home') }}"
-    >
-      {{ store_name }}
-    </a>
-
-    <nav
-      class="nav"
-      aria-label="Shop"
-    >
-
-      <a href="{{ url_for('shop.shop') }}">
-        All clothing
-      </a>
-
+    <nav class="nav" aria-label="Shop">
+      <a href="{{ url_for('shop.shop') }}">All clothing</a>
       {% for c in nav_categories %}
-        <a
-          href="{{ url_for('shop.shop', category=c.slug) }}"
-        >
-          {{ c.name }}
-        </a>
+        <a href="{{ url_for('shop.shop', category=c.slug) }}">{{ c.name }}</a>
       {% endfor %}
-
     </nav>
 
     <div class="tools">
-
-      <form
-        action="{{ url_for('shop.shop') }}"
-        class="search"
-        role="search"
-      >
-        <label
-          class="sr"
-          for="q"
-        >
-          Search
-        </label>
-
-        <input
-          id="q"
-          name="q"
-          type="search"
-          placeholder="Search"
-          value="{{ request.args.get('q', '') }}"
-        >
+      <form action="{{ url_for('shop.shop') }}" class="search" role="search">
+        <label class="sr" for="q">Search</label>
+        <input id="q" name="q" type="search" placeholder="Search" value="{{ request.args.get('q', '') }}">
       </form>
 
       {% if current_user.is_authenticated %}
-
         {% if current_user.is_admin %}
-          <a href="{{ url_for('admin.dashboard') }}">
-            Admin
-          </a>
+          <a href="{{ url_for('admin.dashboard') }}">Admin</a>
         {% endif %}
-
-        <a href="{{ url_for('auth.account') }}">
-          Account
-        </a>
-
+        <a href="{{ url_for('auth.account') }}">Account</a>
       {% else %}
-
-        <a href="{{ url_for('auth.login') }}">
-          Log in
-        </a>
-
+        <a href="{{ url_for('auth.login') }}">Log in</a>
       {% endif %}
 
-      <a
-        class="cart-link"
-        href="{{ url_for('cart.view') }}"
-      >
+      <a class="cart-link" href="{{ url_for('cart.view') }}">
         Cart
-
-        <span
-          class="count"
-          aria-label="{{ cart_count }} items"
-        >
-          {{ cart_count }}
-        </span>
+        <span class="count" aria-label="{{ cart_count }} items">{{ cart_count }}</span>
       </a>
-
     </div>
-
   </div>
-
 </header>
 
 <main id="main">
-
   {% with messages = get_flashed_messages(with_categories=true) %}
-
     {% if messages %}
-
-      <div
-        class="container flashes"
-        role="status"
-      >
-
+      <div class="container flashes" role="status">
         {% for cat, msg in messages %}
-
-          <p class="flash {{ cat }}">
-            {{ msg }}
-          </p>
-
+          <p class="flash {{ cat }}">{{ msg }}</p>
         {% endfor %}
-
       </div>
-
     {% endif %}
-
   {% endwith %}
 
-  {% block content %}
-  {% endblock %}
-
+  {% block content %}{% endblock %}
 </main>
 
 <footer class="site-footer">
-
   <div class="container">
-
     <p>
-      {{ store_name }}.
-      Free delivery on orders over
+      {{ store_name }}. Free delivery on orders over
       {{ free_shipping_over|money }}.
     </p>
 
     {% if current_user.is_authenticated %}
-
-      <form
-        method="post"
-        action="{{ url_for('auth.logout') }}"
-      >
-
-        <input
-          type="hidden"
-          name="csrf_token"
-          value="{{ csrf_token() }}"
-        >
-
-        <button
-          class="link"
-          type="submit"
-        >
-          Log out
-        </button>
-
-      </form>
-
-    {% endif %}
-
-  </div>
-
-</footer>
-<footer class="site-footer">
-  <div class="container">
-    <p>{{ store_name }}. Free delivery on orders over {{ free_shipping_over|money }}.</p>
-    <nav class="footer-nav">
-      <a href="{{ url_for('cart.track') }}">Track an order</a>
-      {% if current_user.is_authenticated %}
-      <form method="post" action="{{ url_for('auth.logout') }}" style="display:inline">
+      <form method="post" action="{{ url_for('auth.logout') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button class="link" type="submit">Log out</button>
       </form>
-      {% endif %}
-    </nav>
+    {% endif %}
   </div>
 </footer>
-<script
-  src="{{ url_for('static', filename='js/main.js') }}"
-  defer
-></script>
 
+<script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
 </body>
 </html>
